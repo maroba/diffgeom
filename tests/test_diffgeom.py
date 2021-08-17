@@ -14,3 +14,25 @@ class TestManifold(unittest.TestCase):
         # Assert
         self.assertEqual(manifold.coords, coords)
         self.assertEqual(manifold.metric, metric)
+
+    def test_euclidean_plane_in_cartesian_coords_has_vanishing_christoffel(self):
+        # Arrange
+        coords = sp.symbols('x, y')
+        metric = sp.diag(1, 1)
+        # Act
+        plane = Manifold(metric, coords)
+        # Assert
+        self.assertEqual(len(plane.gammas), 0)
+
+    def test_euclidean_plane_in_polar_coords_has_nonvanishing_christoffel(self):
+        # Arrange
+        r, phi = sp.symbols('r, phi')
+        metric = sp.diag(1, r**2)
+        # Act
+        plane = Manifold(metric, coords=(r, phi)) # zeroth coord == r, first coord == phi
+        # Assert
+        self.assertEqual(len(plane.gammas), 3)
+        self.assertEqual(plane.gammas[0, 1, 1], -r)
+        self.assertEqual(plane.gammas[1, 0, 1], 1/r)
+        self.assertEqual(plane.gammas[1, 1, 0], 1 / r)
+
