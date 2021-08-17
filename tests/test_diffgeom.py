@@ -1,6 +1,6 @@
 import unittest
 import sympy as sp
-from diffgeom import Manifold
+from diffgeom import Manifold, Tensor
 
 
 class TestManifold(unittest.TestCase):
@@ -36,3 +36,44 @@ class TestManifold(unittest.TestCase):
         self.assertEqual(plane.gammas[1, 0, 1], 1/r)
         self.assertEqual(plane.gammas[1, 1, 0], 1 / r)
 
+
+class TestTensor(unittest.TestCase):
+
+    def test_init_tensor_with_values_stores_values(self):
+        # Arrange
+        r, phi = sp.symbols('r, phi')
+        metric = sp.diag(1, r**2)
+        plane = Manifold(metric, coords=(r, phi))
+
+        # Act
+        A = Tensor(plane, 'ulu', {(0, 1, 0): r**4, (1, 0, 1): 1/r**2})
+
+        # Assert
+        self.assertEqual(len(A), 2)
+        self.assertEqual(A[0, 1, 0], r**4)
+        self.assertEqual(A[1, 0, 1], 1 / r**2)
+
+    def test_set_tensor_component_stores_value(self):
+        # Arrange
+        r, phi = sp.symbols('r, phi')
+        metric = sp.diag(1, r**2)
+        plane = Manifold(metric, coords=(r, phi))
+        A = Tensor(plane, 'ulu', {(0, 1, 0): r ** 4, (1, 0, 1): 1 / r ** 2})
+
+        # Act
+        A[1, 1, 1] = r**3
+
+        # Assert
+        self.assertEqual(A[1, 1, 1], r**3)
+
+    def test_init_tensor_without_values_is_zero_tensor(self):
+
+        # Arrange
+        r, phi = sp.symbols('r, phi')
+        metric = sp.diag(1, r ** 2)
+        plane = Manifold(metric, coords=(r, phi))
+        # Act
+        A = Tensor(plane, 'ulu')
+
+        # Assert
+        self.assertEqual(len(A), 0)

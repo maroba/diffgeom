@@ -1,1 +1,1 @@
-from .diffgeom import *
+from .diffgeom import Manifold, Tensor
