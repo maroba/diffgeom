@@ -1,4 +1,5 @@
 import sympy as sp
+from itertools import product
 
 
 class Manifold(object):
@@ -15,7 +16,7 @@ class IndexedObject(object):
         if values is None:
             self.values = {}
         else:
-            self.values = values
+            self.values = dict(values)
         if names is None:
             self.names_map = {}
         else:
@@ -34,6 +35,8 @@ class IndexedObject(object):
 
     def _translate_multi_idx(self, m_idx):
         result = []
+        if not hasattr(m_idx, '__len__'):
+            m_idx = (m_idx, )
         for idx in m_idx:
             if isinstance(idx, int):
                 result.append(idx)
@@ -95,9 +98,48 @@ class Tensor(IndexedObject):
 
         return result
 
+    def __mul__(self, other):
+        result = Tensor(self.manifold, self.idx_pos + other.idx_pos)
+
+        for m_idx in result.multi_indices:
+            m_idx_left = m_idx[:self.rank]
+            m_idx_right = m_idx[self.rank:]
+            result[m_idx] = self[m_idx_left] * other[m_idx_right]
+
+        return result
+
+    @property
+    def rank(self):
+        return len(self.idx_pos)
+
     def guard_is_compatible_with(self, other):
         if self.idx_pos != other.idx_pos:
             raise IncompatibleIndexPositionException
+
+    def contract(self, idx1, idx2):
+        if idx2 < idx1:
+            idx1, idx2 = idx2, idx1
+        idx_pos = list(self.idx_pos)
+        del idx_pos[idx2]
+        del idx_pos[idx1]
+        idx_pos = ''.join(idx_pos)
+
+        result = Tensor(self.manifold, idx_pos)
+
+        for m_idx in self.multi_indices:
+            if m_idx[idx1] != m_idx[idx2]:
+                continue
+            value = self[m_idx]
+            m_idx = list(m_idx)
+            del m_idx[idx2]
+            del m_idx[idx1]
+            result[m_idx] += value
+
+        return result
+
+    @property
+    def multi_indices(self):
+        return product(*tuple(list(range(len(self.manifold.coords))) for _ in range(self.rank)))
 
 
 class IncompatibleIndexPositionException(Exception):

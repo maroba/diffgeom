@@ -150,3 +150,38 @@ class TestTensor(unittest.TestCase):
 
         with self.assertRaises(IncompatibleIndexPositionException):
             A - B
+
+    def test_tensor_product_returns_new_tensor(self):
+        # Arrange
+        r, phi = sp.symbols('r, phi')
+        metric = sp.diag(1, r ** 2)
+        plane = Manifold(metric, coords=(r, phi))
+        A = Tensor(plane, 'ulu')
+        B = Tensor(plane, 'lu')
+
+        # Act
+        C = A * B
+
+        # Assert
+        self.assertEqual(C.rank, 5)
+
+    def test_tensor_contraction_returns_new_tensor_of_lower_rank(self):
+        # Arrange
+        coords = sp.symbols('t, x, y, z')
+        metric = sp.diag(-1, 1, 1, 1)
+        minkowski = Manifold(metric, coords)
+        x = Tensor(minkowski, 'u', values={(k,): c for k, c in enumerate(coords)})
+        eta = Tensor(minkowski, 'll', {(k, k): metric[k, k] for k in range(4)})
+
+        # Act
+        prod = eta * x
+        x_low = prod.contract(1, 2)
+
+        # Assert
+        self.assertEqual(prod.rank, 3)
+        self.assertEqual(x_low.rank, 1)
+        self.assertEqual(x_low.idx_pos, 'l')
+        self.assertEqual(x_low[0], -coords[0])
+        for k in range(1, 4):
+            self.assertEqual(x_low[k], coords[k])
+
