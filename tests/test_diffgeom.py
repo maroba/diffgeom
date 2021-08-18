@@ -1,6 +1,6 @@
 import unittest
 import sympy as sp
-from diffgeom import Manifold, Tensor
+from diffgeom import Manifold, Tensor, IncompatibleIndexPositionException
 
 
 class TestManifold(unittest.TestCase):
@@ -98,3 +98,55 @@ class TestTensor(unittest.TestCase):
 
         # Assert
         self.assertEqual(len(A), 0)
+
+    def test_add_tensors_of_same_structure_gives_sum(self):
+        # Arrange
+        r, phi = sp.symbols('r, phi')
+        metric = sp.diag(1, r ** 2)
+        plane = Manifold(metric, coords=(r, phi))
+        A = Tensor(plane, 'ulu')
+        B = Tensor(plane, 'ulu')
+        A[0, 1, 1] = 1
+        B[0, 1, 1] = 2
+        B[0, 0, 1] = 3
+
+        # Act
+        C = A + B
+
+        # Assert
+        self.assertEqual(len(C), 2)
+        self.assertEqual(C[0, 1, 1], 3)
+        self.assertEqual(C[0, 0, 1], 3)
+
+    def test_sub_tensors_of_same_structure_gives_sum(self):
+        # Arrange
+        r, phi = sp.symbols('r, phi')
+        metric = sp.diag(1, r ** 2)
+        plane = Manifold(metric, coords=(r, phi))
+        A = Tensor(plane, 'ulu')
+        B = Tensor(plane, 'ulu')
+        A[0, 1, 1] = 1
+        B[0, 1, 1] = 1
+        B[0, 0, 1] = 3
+
+        # Act
+        C = A - B
+
+        # Assert
+        self.assertEqual(len(C), 1)
+        self.assertEqual(C[0, 0, 1], -3)
+
+    def test_add_or_sub_incompatible_tensors_raises_exception(self):
+        # Arrange
+        r, phi = sp.symbols('r, phi')
+        metric = sp.diag(1, r ** 2)
+        plane = Manifold(metric, coords=(r, phi))
+        A = Tensor(plane, 'uuu')
+        B = Tensor(plane, 'lll')
+
+        # Act / Assert
+        with self.assertRaises(IncompatibleIndexPositionException):
+            A + B
+
+        with self.assertRaises(IncompatibleIndexPositionException):
+            A - B

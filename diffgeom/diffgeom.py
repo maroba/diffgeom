@@ -25,10 +25,12 @@ class IndexedObject(object):
         return len(self.values)
 
     def __getitem__(self, m_idx):
-        return self.values[self._translate_multi_idx(m_idx)]
+        return self.values.get(self._translate_multi_idx(m_idx), 0)
 
     def __setitem__(self, m_idx, value):
         self.values[self._translate_multi_idx(m_idx)] = value
+        if value == 0:
+            del self.values[self._translate_multi_idx(m_idx)]
 
     def _translate_multi_idx(self, m_idx):
         result = []
@@ -38,6 +40,7 @@ class IndexedObject(object):
             else:
                 result.append(self.names_map[idx])
         return tuple(result)
+
 
 class Christoffel(IndexedObject):
 
@@ -68,4 +71,34 @@ class Tensor(IndexedObject):
         self.manifold = manifold
         self.idx_pos = idx_pos
 
+    def __add__(self, other):
+        self.guard_is_compatible_with(other)
+        result = Tensor(self.manifold, self.idx_pos)
 
+        for m_idx, value in self.values.items():
+            result[m_idx] = value
+
+        for m_idx, value in other.values.items():
+            result[m_idx] += value
+
+        return result
+
+    def __sub__(self, other):
+        self.guard_is_compatible_with(other)
+        result = Tensor(self.manifold, self.idx_pos)
+
+        for m_idx, value in self.values.items():
+            result[m_idx] = value
+
+        for m_idx, value in other.values.items():
+            result[m_idx] -= value
+
+        return result
+
+    def guard_is_compatible_with(self, other):
+        if self.idx_pos != other.idx_pos:
+            raise IncompatibleIndexPositionException
+
+
+class IncompatibleIndexPositionException(Exception):
+    pass
