@@ -1,1 +1,1 @@
-- Christoffel symbols should be accessible by coordinate names
+- s

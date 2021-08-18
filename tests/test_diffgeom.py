@@ -37,6 +37,27 @@ class TestManifold(unittest.TestCase):
         self.assertEqual(plane.gammas[1, 1, 0], 1 / r)
 
 
+class TestIndexedObject(unittest.TestCase):
+
+    def test_indexedobject_access_component_by_name(self):
+        # Arrange
+        r, phi = sp.symbols('r, phi')
+        metric = sp.diag(1, r ** 2)
+        plane = Manifold(metric, coords=(r, phi))
+        A = Tensor(plane, 'ulu', {(0, 1, 0): r**4, (1, 0, 1): 1/r**2})
+
+        # Act
+        actual_get = A[r, phi, r]
+        A[r, r, r] = 5
+        actual_set = A[0, 0, 0]
+
+        # Assert
+        self.assertEqual(actual_get, r**4)
+        self.assertEqual(actual_get, A[0, 1, 0])
+        self.assertEqual(actual_set, 5)
+        self.assertEqual(plane.gammas[phi, r, phi], 1 / r)
+
+
 class TestTensor(unittest.TestCase):
 
     def test_init_tensor_with_values_stores_values(self):

@@ -11,26 +11,38 @@ class Manifold(object):
 
 class IndexedObject(object):
 
-    def __init__(self, values=None):
+    def __init__(self, values=None, names=None):
         if values is None:
             self.values = {}
         else:
             self.values = values
+        if names is None:
+            self.names_map = {}
+        else:
+            self.names_map = {n: k for k, n in enumerate(names)}
 
     def __len__(self):
         return len(self.values)
 
     def __getitem__(self, m_idx):
-        return self.values[m_idx]
+        return self.values[self._translate_multi_idx(m_idx)]
 
     def __setitem__(self, m_idx, value):
-        self.values[m_idx] = value
+        self.values[self._translate_multi_idx(m_idx)] = value
 
+    def _translate_multi_idx(self, m_idx):
+        result = []
+        for idx in m_idx:
+            if isinstance(idx, int):
+                result.append(idx)
+            else:
+                result.append(self.names_map[idx])
+        return tuple(result)
 
 class Christoffel(IndexedObject):
 
     def __init__(self, coords, metric):
-        super(Christoffel, self).__init__()
+        super(Christoffel, self).__init__(names=coords)
 
         x = coords
         g = metric
@@ -52,7 +64,7 @@ class Christoffel(IndexedObject):
 class Tensor(IndexedObject):
 
     def __init__(self, manifold, idx_pos, values=None):
-        super(Tensor, self).__init__(values)
+        super(Tensor, self).__init__(values, names=manifold.coords)
         self.manifold = manifold
         self.idx_pos = idx_pos
 
