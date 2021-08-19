@@ -215,3 +215,21 @@ class TestTensor(unittest.TestCase):
         self.assertEqual(xx_high.idx_pos, 'ul')
         self.assertEqual(xx_high[0, 0], coords[0])
         self.assertEqual(xx_high[1, 1], coords[1])
+
+    def test_diff_tensor(self):
+        r, ph, th = sp.symbols('r, phi, theta')
+        sphere = Manifold(sp.diag(r ** 2, r ** 2 * sp.sin(th) ** 2), (th, ph))
+
+        A = Tensor(sphere, 'ul', {(0, 0): th**2+ph**3,
+                                    (0, 1): th**3 + ph**2,
+                                    (1, 0): th**2 * ph**3,
+                                    (1, 1): th**3 * ph**2
+                                    })
+
+        nabla_A = A.diff()
+        C = sphere.gammas
+
+        assert nabla_A[(th, th, th)] == sp.diff(A[th, th], th)
+        assert nabla_A[(th, th, ph)] ==  sp.diff(A[th, th], ph) + A[th, th] * C[th, th, ph] + A[ph, th] * C[th, ph, ph] \
+                                        - A[th, th] * C[th, th, ph] - A[th, ph] * C[ph, th, ph]
+        assert nabla_A[(th, th, ph)] != sp.diff(A[th, th], ph)

@@ -126,6 +126,10 @@ class Tensor(IndexedObject):
     def coords(self):
         return self.manifold.coords
 
+    @property
+    def dims(self):
+        return self.manifold.dims
+
     def guard_is_compatible_with(self, other):
         if self.idx_pos != other.idx_pos:
             raise IncompatibleIndexPositionException
@@ -168,6 +172,32 @@ class Tensor(IndexedObject):
         g_inv = self.manifold.metric.inv()
         g_inv = Tensor(self.manifold, 'uu', values={(k, k): g_inv[k, k] for k in range(self.manifold.dims)})
         return (g_inv * self).contract(1, 2 + idx)
+
+    def diff(self):
+        result = Tensor(self.manifold, self.idx_pos + 'l')
+
+        for m_idx in self.multi_indices:
+            for sigma in range(self.dims):
+
+                x = self.manifold.coords[sigma]
+                value = sp.diff(self[m_idx], x)
+                for idx in range(self.rank):
+                    if self.idx_pos[idx] == 'u':
+                        for alpha in range(self.dims):
+                            gamma = self.manifold.gammas[(m_idx[idx], alpha, sigma)]
+                            m_idx_var = list(m_idx)
+                            m_idx_var[idx] = alpha
+                            value += self[tuple(m_idx_var)] * gamma
+                    else:
+                        for alpha in range(self.dims):
+                            gamma = self.manifold.gammas[(alpha, m_idx[idx], sigma)]
+                            m_idx_var = list(m_idx)
+                            m_idx_var[idx] = alpha
+                            value -= self[tuple(m_idx_var)] * gamma
+
+                result[tuple(list(m_idx) + [sigma])] = value
+
+        return result
 
 
 class IncompatibleIndexPositionException(Exception):
