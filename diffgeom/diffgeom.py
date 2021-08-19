@@ -197,7 +197,7 @@ class Tensor(IndexedObject):
 
     @property
     def multi_indices(self):
-        return product(*tuple(list(range(len(self.manifold.coords))) for _ in range(self.rank)))
+        return product(*tuple(list(range(self.dims)) for _ in range(self.rank)))
 
     def lower_index(self, idx):
         if self.idx_pos[idx] == 'l':
@@ -264,9 +264,6 @@ class Tensor(IndexedObject):
         return result
 
 
-
-
-
 class RiemannTensor(Tensor):
 
     def __init__(self, manifold):
@@ -301,7 +298,6 @@ class Minkowski(Manifold):
     def __init__(self):
         t, x, y, z = sp.symbols('t, x, y, z')
         super(Minkowski, self).__init__(sp.diag(-1, 1, 1, 1), (t, x, y, z))
-
 
 
 class IncompatibleIndexPositionException(Exception):
