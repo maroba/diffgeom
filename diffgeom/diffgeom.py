@@ -5,9 +5,22 @@ from itertools import product
 class Manifold(object):
 
     def __init__(self, metric, coords):
-        self.metric = metric
+        self._metric = metric
         self.coords = coords
         self.gammas = Christoffel(coords, metric)
+
+    @property
+    def metric(self):
+        return Tensor(self, 'll', {(i, j): self._metric[i, j] for i in range(self.dims)
+                                                              for j in range(self.dims)
+                                   })
+
+    @property
+    def metric_inv(self):
+        inv = self._metric.inv()
+        return Tensor(self, 'll', {(i, j): inv[i, j] for i in range(self.dims)
+                                   for j in range(self.dims)
+                                   })
 
     @property
     def dims(self):
@@ -173,7 +186,7 @@ class Tensor(IndexedObject):
     def raise_index(self, idx):
         if self.idx_pos[idx] == 'u':
             raise IncompatibleIndexPositionException('Index already upstairs.')
-        g_inv = self.manifold.metric.inv()
+        g_inv = self.manifold.metric_inv
         g_inv = Tensor(self.manifold, 'uu', values={(k, k): g_inv[k, k] for k in range(self.manifold.dims)})
         return (g_inv * self).contract(1, 2 + idx)
 
@@ -231,6 +244,13 @@ class Sphere(Manifold):
         if unit:
             r = 1
         super(Sphere, self).__init__(sp.diag(r ** 2, r ** 2 * sp.sin(th) ** 2), (th, ph))
+
+
+class Minkowski(Manifold):
+
+    def __init__(self):
+        t, x, y, z = sp.symbols('t, x, y, z')
+        super(Minkowski, self).__init__(sp.diag(-1, 1, 1, 1), (t, x, y, z))
 
 
 class IncompatibleIndexPositionException(Exception):

@@ -1,6 +1,6 @@
 import unittest
 import sympy as sp
-from diffgeom import Manifold, Tensor, IncompatibleIndexPositionException, RiemannTensor, Sphere
+from diffgeom import Manifold, Tensor, IncompatibleIndexPositionException, RiemannTensor, Sphere, Minkowski
 
 
 class TestManifold(unittest.TestCase):
@@ -13,7 +13,8 @@ class TestManifold(unittest.TestCase):
         manifold = Manifold(metric, coords)
         # Assert
         self.assertEqual(manifold.coords, coords)
-        self.assertEqual(manifold.metric, metric)
+        self.assertEqual(manifold.metric[0, 0], metric[0, 0])
+        self.assertEqual(manifold.metric[1, 1], metric[1, 1])
 
     def test_euclidean_plane_in_cartesian_coords_has_vanishing_christoffel(self):
         # Arrange
@@ -167,11 +168,10 @@ class TestTensor(unittest.TestCase):
 
     def test_tensor_contraction_returns_new_tensor_of_lower_rank(self):
         # Arrange
-        coords = sp.symbols('t, x, y, z')
-        metric = sp.diag(-1, 1, 1, 1)
-        minkowski = Manifold(metric, coords)
+        minkowski = Minkowski()
+        coords = minkowski.coords
         x = Tensor(minkowski, 'u', values={k: c for k, c in enumerate(coords)})
-        eta = Tensor(minkowski, 'll', {(k, k): metric[k, k] for k in range(4)})
+        eta = Tensor(minkowski, 'll', {(k, k): minkowski.metric[k, k] for k in range(4)})
 
         # Act
         prod = eta * x
@@ -202,9 +202,8 @@ class TestTensor(unittest.TestCase):
 
     def test_raising_index_returns_raised_tensor(self):
         # Arrange
-        coords = sp.symbols('t, x, y, z')
-        metric = sp.diag(-1, 1, 1, 1)
-        minkowski = Manifold(metric, coords)
+        minkowski = Minkowski()
+        coords = minkowski.coords
         xx = Tensor(minkowski, 'll', values={(k,k): c for k, c in enumerate(coords)})
         xx[0, 0] *= -1
 
@@ -233,7 +232,6 @@ class TestTensor(unittest.TestCase):
         assert nabla_A[(th, th, ph)] ==  sp.diff(A[th, th], ph) + A[th, th] * C[th, th, ph] + A[ph, th] * C[th, ph, ph] \
                                         - A[th, th] * C[th, th, ph] - A[th, ph] * C[ph, th, ph]
         assert nabla_A[(th, th, ph)] != sp.diff(A[th, th], ph)
-
 
 
 class TestRiemann(unittest.TestCase):
