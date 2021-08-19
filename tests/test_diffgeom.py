@@ -170,7 +170,7 @@ class TestTensor(unittest.TestCase):
         coords = sp.symbols('t, x, y, z')
         metric = sp.diag(-1, 1, 1, 1)
         minkowski = Manifold(metric, coords)
-        x = Tensor(minkowski, 'u', values={(k,): c for k, c in enumerate(coords)})
+        x = Tensor(minkowski, 'u', values={k: c for k, c in enumerate(coords)})
         eta = Tensor(minkowski, 'll', {(k, k): metric[k, k] for k in range(4)})
 
         # Act

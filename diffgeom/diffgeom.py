@@ -17,10 +17,14 @@ class Manifold(object):
 class IndexedObject(object):
 
     def __init__(self, values=None, names=None):
-        if values is None:
-            self.values = {}
-        else:
-            self.values = dict(values)
+        self.values = {}
+
+        if values is not None:
+            for key, value in values.items():
+                if isinstance(key, int):
+                    key = key,
+                self.values[key] = value
+
         if names is None:
             self.names_map = {}
         else:
@@ -116,6 +120,10 @@ class Tensor(IndexedObject):
     def rank(self):
         return len(self.idx_pos)
 
+    @property
+    def coords(self):
+        return self.manifold.coords
+
     def guard_is_compatible_with(self, other):
         if self.idx_pos != other.idx_pos:
             raise IncompatibleIndexPositionException
@@ -158,7 +166,6 @@ class Tensor(IndexedObject):
         g_inv = self.manifold.metric.inv()
         g_inv = Tensor(self.manifold, 'uu', values={(k, k): g_inv[k, k] for k in range(self.manifold.dims)})
         return (g_inv * self).contract(1, 2 + idx)
-
 
 
 class IncompatibleIndexPositionException(Exception):
