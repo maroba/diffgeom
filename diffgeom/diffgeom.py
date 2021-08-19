@@ -29,8 +29,12 @@ class Manifold(object):
 
 class IndexedObject(object):
 
-    def __init__(self, values=None, names=None):
+    def __init__(self, values=None, names=None, latex_head=None, idx_pos=None):
         self.values = {}
+        if latex_head is not None:
+            self.latex_head = latex_head
+        else:
+            self.latex_head = '\\Box'
 
         if values is not None:
             for key, value in values.items():
@@ -44,6 +48,9 @@ class IndexedObject(object):
             self.names_map = {}
         else:
             self.names_map = {n: k for k, n in enumerate(names)}
+
+        self.idx_pos = idx_pos
+
 
     def __len__(self):
         return len(self.values)
@@ -71,11 +78,28 @@ class IndexedObject(object):
         for key, value in self.values.items():
             self[key] = sp.simplify(value)
 
+    def _repr_latex_(self):
+
+        head = self.latex_head
+        from sympy.printing.latex import latex
+        latex_str = ''
+
+        for m_idx, value in self.values.items():
+            latex_value = latex(value, mode='plain')
+            latex_str += head
+            for k, pos in enumerate(self.idx_pos):
+                if pos == 'u':
+                    latex_str += '^{' +  str(m_idx[k]) + '}\\,'
+                else:
+                    latex_str += '_{' +  str(m_idx[k]) + '}\\,'
+            latex_str += ' = ' + latex_value + '\\\\\n'
+        return '$$\\displaystyle %s $$' % latex_str
+
 
 class Christoffel(IndexedObject):
 
     def __init__(self, coords, metric):
-        super(Christoffel, self).__init__(names=coords)
+        super(Christoffel, self).__init__(names=coords, latex_head='\\Gamma', idx_pos='ull')
 
         x = coords
         g = metric
@@ -96,10 +120,9 @@ class Christoffel(IndexedObject):
 
 class Tensor(IndexedObject):
 
-    def __init__(self, manifold, idx_pos, values=None):
-        super(Tensor, self).__init__(values, names=manifold.coords)
+    def __init__(self, manifold, idx_pos, values=None, latex_head=None):
+        super(Tensor, self).__init__(values, names=manifold.coords, idx_pos=idx_pos, latex_head=latex_head)
         self.manifold = manifold
-        self.idx_pos = idx_pos
 
     def __add__(self, other):
         self.guard_is_compatible_with(other)
@@ -159,7 +182,7 @@ class Tensor(IndexedObject):
         del idx_pos[idx1]
         idx_pos = ''.join(idx_pos)
 
-        result = Tensor(self.manifold, idx_pos)
+        result = Tensor(self.manifold, idx_pos, latex_head=self.latex_head)
 
         for m_idx in self.multi_indices:
             if m_idx[idx1] != m_idx[idx2]:
@@ -180,15 +203,38 @@ class Tensor(IndexedObject):
         if self.idx_pos[idx] == 'l':
             raise IncompatibleIndexPositionException('Index already downstairs.')
         g = self.manifold.metric
-        g = Tensor(self.manifold, 'll', values={(k, k): g[k, k] for k in range(self.manifold.dims)})
-        return (g * self).contract(1, 2 + idx)
+        idx_pos = list(self.idx_pos)
+        idx_pos[idx] = 'l'
+        result = Tensor(self.manifold, ''.join(idx_pos), latex_head=self.latex_head)
+
+        dims = self.manifold.dims
+        for m_idx in self.multi_indices:
+
+            for sigma in range(dims):
+                m_idx_var = list(m_idx)
+                m_idx_var[idx] = sigma
+                result[m_idx] += g[m_idx[idx], sigma] * self[m_idx_var]
+
+        return result
 
     def raise_index(self, idx):
         if self.idx_pos[idx] == 'u':
             raise IncompatibleIndexPositionException('Index already upstairs.')
         g_inv = self.manifold.metric_inv
-        g_inv = Tensor(self.manifold, 'uu', values={(k, k): g_inv[k, k] for k in range(self.manifold.dims)})
-        return (g_inv * self).contract(1, 2 + idx)
+
+        idx_pos = list(self.idx_pos)
+        idx_pos[idx] = 'u'
+        result = Tensor(self.manifold, ''.join(idx_pos), latex_head=self.latex_head)
+
+        dims = self.manifold.dims
+        for m_idx in self.multi_indices:
+
+            for sigma in range(dims):
+                m_idx_var = list(m_idx)
+                m_idx_var[idx] = sigma
+                result[m_idx] += g_inv[m_idx[idx], sigma] * self[m_idx_var]
+
+        return result
 
     def diff(self):
         result = Tensor(self.manifold, self.idx_pos + 'l')
@@ -214,13 +260,17 @@ class Tensor(IndexedObject):
 
                 result[tuple(list(m_idx) + [sigma])] = value
 
+        result.latex_head = '\\nabla ' + result.latex_head
         return result
+
+
+
 
 
 class RiemannTensor(Tensor):
 
     def __init__(self, manifold):
-        super(RiemannTensor, self).__init__(manifold, 'ulll')
+        super(RiemannTensor, self).__init__(manifold, 'ulll', latex_head='R')
         C = self.manifold.gammas
         x = self.manifold.coords
         dims = len(x)
@@ -251,6 +301,7 @@ class Minkowski(Manifold):
     def __init__(self):
         t, x, y, z = sp.symbols('t, x, y, z')
         super(Minkowski, self).__init__(sp.diag(-1, 1, 1, 1), (t, x, y, z))
+
 
 
 class IncompatibleIndexPositionException(Exception):
