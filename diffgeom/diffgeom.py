@@ -23,6 +23,8 @@ class IndexedObject(object):
             for key, value in values.items():
                 if isinstance(key, int):
                     key = key,
+                if not isinstance(key, tuple):
+                    key = tuple(key)
                 self.values[key] = value
 
         if names is None:
