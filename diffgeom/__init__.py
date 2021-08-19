@@ -1,3 +1,3 @@
-from .diffgeom import Manifold, Tensor, IncompatibleIndexPositionException, RiemannTensor
-from .diffgeom import Sphere, Minkowski
+from .indexed import Tensor, IncompatibleIndexPositionException, RiemannTensor
+from .manifold import Manifold, Sphere, Minkowski
 
