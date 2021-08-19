@@ -1,6 +1,6 @@
 import unittest
 import sympy as sp
-from diffgeom import Manifold, Tensor, IncompatibleIndexPositionException
+from diffgeom import Manifold, Tensor, IncompatibleIndexPositionException, RiemannTensor
 
 
 class TestManifold(unittest.TestCase):
@@ -233,3 +233,28 @@ class TestTensor(unittest.TestCase):
         assert nabla_A[(th, th, ph)] ==  sp.diff(A[th, th], ph) + A[th, th] * C[th, th, ph] + A[ph, th] * C[th, ph, ph] \
                                         - A[th, th] * C[th, th, ph] - A[th, ph] * C[ph, th, ph]
         assert nabla_A[(th, th, ph)] != sp.diff(A[th, th], ph)
+
+
+
+class TestRiemann(unittest.TestCase):
+
+    def test_euclidean_plan_has_vanishing_riemann(self):
+
+        r, phi = sp.symbols('r phi')
+        metric = sp.diag(1, r**2)
+        plane = Manifold(metric, (r, phi))
+
+        riemann = RiemannTensor(plane)
+        assert len(riemann.values) == 0
+
+    def test_sphere_has_nonvanishing_riemann(self):
+
+        r, ph, th = sp.symbols('r, phi, theta')
+        sphere = Manifold(sp.diag(r ** 2, r ** 2 * sp.sin(th) ** 2), (th, ph))
+        R = RiemannTensor(sphere)
+
+        assert len(R.values) > 0
+        assert R[0, 1, 0, 1] == sp.sin(th)**2
+        assert R[0, 1, 1, 0] == -sp.sin(th) ** 2
+        assert R[1, 0, 1, 0] == 1
+        assert R[1, 0, 0, 1] == -1

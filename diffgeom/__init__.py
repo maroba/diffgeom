@@ -1,1 +1,1 @@
-from .diffgeom import Manifold, Tensor, IncompatibleIndexPositionException
+from .diffgeom import Manifold, Tensor, IncompatibleIndexPositionException, RiemannTensor

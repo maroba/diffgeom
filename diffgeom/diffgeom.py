@@ -54,6 +54,10 @@ class IndexedObject(object):
                 result.append(self.names_map[idx])
         return tuple(result)
 
+    def simplify(self):
+        for key, value in self.values.items():
+            self[key] = sp.simplify(value)
+
 
 class Christoffel(IndexedObject):
 
@@ -199,6 +203,25 @@ class Tensor(IndexedObject):
 
         return result
 
+
+class RiemannTensor(Tensor):
+
+    def __init__(self, manifold):
+        super(RiemannTensor, self).__init__(manifold, 'ulll')
+        C = self.manifold.gammas
+        x = self.manifold.coords
+        dims = len(x)
+        for alpha in range(dims):
+            for beta in range(dims):
+                for mu in range(dims):
+                    for nu in range(dims):
+                        self[alpha, beta, mu, nu] += sp.diff(C[alpha, beta, nu], x[mu]) \
+                                                        - sp.diff(C[alpha, beta, mu], x[nu])
+                        for sigma in range(dims):
+                            self[alpha, beta, mu, nu] += C[alpha, sigma, mu] * C[sigma, beta, nu]
+                            self[alpha, beta, mu, nu] -= C[alpha, sigma, nu] * C[sigma, beta, mu]
+
+        self.simplify()
 
 class IncompatibleIndexPositionException(Exception):
     pass
