@@ -5,20 +5,55 @@ from diffgeom import Tensor
 
 
 class Manifold(object):
+    """
+    Class representing a general (pseudo)Riemannian manifold with given coordinate system
+    """
 
     def __init__(self, metric, coords):
+        """
+
+        Parameters
+        ----------
+        metric: sympy matrix
+            matrix with the metric coefficients in given coordinate system
+
+        coords: tuple of sympy symbols
+            the coordinates
+
+        Examples
+        --------
+
+        >>> import sympy
+        >>> x, y = sympy.symbols('x, y')
+        >>> plane = Manifold(sympy.diag(1, 1), (x, y))
+
+        """
         self._metric = metric
         self.coords = coords
         self.gammas = Christoffel(coords, metric)
 
     @property
     def metric(self):
+        """
+        Returns the metric tensor of the manifold.
+
+        Returns
+        -------
+            diffgeom.Tensor of rank 2 (lower)
+        """
         return Tensor(self, 'll', {(i, j): self._metric[i, j] for i in range(self.dims)
                                                               for j in range(self.dims)
                                    })
 
     @property
     def metric_inv(self):
+        """
+        Returns the inverse of the metric tensor of the manifold.
+
+        Returns
+        -------
+            diffgeom.Tensor of rank 2 (upper)
+        """
         inv = self._metric.inv()
         return Tensor(self, 'll', {(i, j): inv[i, j] for i in range(self.dims)
                                    for j in range(self.dims)
@@ -26,9 +61,33 @@ class Manifold(object):
 
     @property
     def dims(self):
+        """
+        Returns the number of space dimensions
+
+        Returns
+        -------
+            int
+        """
         return len(self.coords)
 
     def transform(self, new_coords, trans):
+        """
+        Performs coordinate transformation of the given coordinate system.
+
+        Parameters
+        ----------
+        new_coords: tuple of sympy symbols
+            the new coordinates
+
+        trans: dict
+            The coordinate transformation given by the OLD coordinates in terms of the NEW ones.
+            Keys: the old coordinates
+            Values: the old coordinates in terms of the new ones
+
+        Returns
+        -------
+            a new Manifold object with the new coordinate system
+        """
         jacobian = []
         for chi in trans.values():
             row = []
@@ -42,6 +101,9 @@ class Manifold(object):
 
 
 class Sphere(Manifold):
+    """
+    Two-dimensional sphere in spherical coordinates.
+    """
 
     def __init__(self, unit=False):
         r, ph, th = sp.symbols('r, phi, theta')
@@ -51,6 +113,9 @@ class Sphere(Manifold):
 
 
 class Minkowski(Manifold):
+    """
+    Flat spacetime in cartesian coordinates.
+    """
 
     def __init__(self):
         t, x, y, z = sp.symbols('t, x, y, z')
@@ -58,6 +123,9 @@ class Minkowski(Manifold):
 
 
 class Schwarzschild(Manifold):
+    """
+    Spacetime with Schwarzschild metric.
+    """
 
     def __init__(self):
         coords = t, r, theta, phi = sp.symbols('t, r, theta, phi')
