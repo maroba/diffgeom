@@ -223,5 +223,15 @@ class RiemannTensor(Tensor):
 
         self.simplify()
 
+
+class Sphere(Manifold):
+
+    def __init__(self, unit=False):
+        r, ph, th = sp.symbols('r, phi, theta')
+        if unit:
+            r = 1
+        super(Sphere, self).__init__(sp.diag(r ** 2, r ** 2 * sp.sin(th) ** 2), (th, ph))
+
+
 class IncompatibleIndexPositionException(Exception):
     pass

@@ -1,6 +1,6 @@
 import unittest
 import sympy as sp
-from diffgeom import Manifold, Tensor, IncompatibleIndexPositionException, RiemannTensor
+from diffgeom import Manifold, Tensor, IncompatibleIndexPositionException, RiemannTensor, Sphere
 
 
 class TestManifold(unittest.TestCase):
@@ -245,15 +245,15 @@ class TestRiemann(unittest.TestCase):
         plane = Manifold(metric, (r, phi))
 
         riemann = RiemannTensor(plane)
-        assert len(riemann.values) == 0
+        assert len(riemann) == 0
 
     def test_sphere_has_nonvanishing_riemann(self):
 
-        r, ph, th = sp.symbols('r, phi, theta')
-        sphere = Manifold(sp.diag(r ** 2, r ** 2 * sp.sin(th) ** 2), (th, ph))
+        sphere = Sphere()
+        th = sphere.coords[0]
         R = RiemannTensor(sphere)
 
-        assert len(R.values) > 0
+        assert len(R) > 0
         assert R[0, 1, 0, 1] == sp.sin(th)**2
         assert R[0, 1, 1, 0] == -sp.sin(th) ** 2
         assert R[1, 0, 1, 0] == 1
