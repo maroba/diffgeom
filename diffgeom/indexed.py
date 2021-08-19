@@ -3,8 +3,25 @@ from itertools import product
 
 
 class IndexedObject(object):
+    """
+    Base class with common behavior of all objects having indices.
+    """
 
     def __init__(self, values=None, names=None, latex_head=None, idx_pos=None):
+        """
+        Should only be called by child class constructors.
+
+        Parameters
+        ----------
+        values: dict
+            The non-zero values of the indexed object.
+            Keys: index-tuples
+            Values: the values
+
+        names:
+        latex_head:
+        idx_pos:
+        """
         self.values = {}
         if latex_head is not None:
             self.latex_head = latex_head

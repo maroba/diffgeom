@@ -99,6 +99,20 @@ class Manifold(object):
 
         return Manifold(metric=new_metric, coords=tuple(new_coords))
 
+    def geodesic_equations(self):
+        eqs = []
+        s = sp.symbols('s')
+        if s in self.coords:
+            raise Exception('Name collision between curve parameter s and coordinate name s')
+        for i, xi in enumerate(self.coords):
+            lhs = sp.Derivative(xi, s, s)
+            rhs = 0
+            for j, xj in enumerate(self.coords):
+                for k, xk in enumerate(self.coords):
+                    rhs += self.gammas[i, j, k] * sp.Derivative(xj, s) * sp.Derivative(xk, s)
+            eqs.append(sp.Eq(lhs, rhs))
+        return eqs, s
+
 
 class Sphere(Manifold):
     """

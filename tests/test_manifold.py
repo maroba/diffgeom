@@ -56,3 +56,27 @@ class TestManifold(unittest.TestCase):
         assert plane_polar.metric[1, 1] == r ** 2
         assert plane_polar.metric[r, r] == 1
         assert plane_polar.metric[phi, phi] == r ** 2
+
+    def test_geodesic_equations_plane_cartesian(self):
+        # Arrange
+        x, y = sp.symbols('x, y')
+        plane = Manifold(metric=sp.diag(1, 1), coords=(x, y))
+
+        # Act
+        eqs, s = plane.geodesic_equations()
+
+        # Assert
+        assert eqs[0] == sp.Eq(sp.Derivative(x, s, s), 0)
+        assert eqs[1] == sp.Eq(sp.Derivative(y, s, s), 0)
+
+    def test_geodesic_equations_plane_polar(self):
+        # Arrange
+        r, phi = sp.symbols('r, phi')
+        plane = Manifold(metric=sp.diag(1, r**2), coords=(r, phi))
+
+        # Act
+        eqs, s = plane.geodesic_equations()
+
+        # Assert
+        assert eqs[0] == sp.Eq(sp.Derivative(r, s, s), -r*sp.Derivative(phi, s)**2)
+        assert eqs[1] == sp.Eq(sp.Derivative(phi, s, s), 2*sp.Derivative(r, s)*sp.Derivative(phi,s)/r)
