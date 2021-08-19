@@ -185,3 +185,33 @@ class TestTensor(unittest.TestCase):
         for k in range(1, 4):
             self.assertEqual(x_low[k], coords[k])
 
+    def test_lowering_index_returns_lowered_tensor(self):
+        # Arrange
+        coords = sp.symbols('t, x, y, z')
+        metric = sp.diag(-1, 1, 1, 1)
+        minkowski = Manifold(metric, coords)
+        xx = Tensor(minkowski, 'uu', values={(k,k): c for k, c in enumerate(coords)})
+
+        # Act
+        xx_low = xx.lower_index(0)
+
+        # Assert
+        self.assertEqual(xx_low.idx_pos, 'lu')
+        self.assertEqual(xx_low[0, 0], -coords[0])
+        self.assertEqual(xx_low[1, 1], coords[1])
+
+    def test_raising_index_returns_raised_tensor(self):
+        # Arrange
+        coords = sp.symbols('t, x, y, z')
+        metric = sp.diag(-1, 1, 1, 1)
+        minkowski = Manifold(metric, coords)
+        xx = Tensor(minkowski, 'll', values={(k,k): c for k, c in enumerate(coords)})
+        xx[0, 0] *= -1
+
+        # Act
+        xx_high = xx.raise_index(0)
+
+        # Assert
+        self.assertEqual(xx_high.idx_pos, 'ul')
+        self.assertEqual(xx_high[0, 0], coords[0])
+        self.assertEqual(xx_high[1, 1], coords[1])

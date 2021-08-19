@@ -9,6 +9,10 @@ class Manifold(object):
         self.coords = coords
         self.gammas = Christoffel(coords, metric)
 
+    @property
+    def dims(self):
+        return len(self.coords)
+
 
 class IndexedObject(object):
 
@@ -140,6 +144,21 @@ class Tensor(IndexedObject):
     @property
     def multi_indices(self):
         return product(*tuple(list(range(len(self.manifold.coords))) for _ in range(self.rank)))
+
+    def lower_index(self, idx):
+        if self.idx_pos[idx] == 'l':
+            raise IncompatibleIndexPositionException('Index already downstairs.')
+        g = self.manifold.metric
+        g = Tensor(self.manifold, 'll', values={(k, k): g[k, k] for k in range(self.manifold.dims)})
+        return (g * self).contract(1, 2 + idx)
+
+    def raise_index(self, idx):
+        if self.idx_pos[idx] == 'u':
+            raise IncompatibleIndexPositionException('Index already upstairs.')
+        g_inv = self.manifold.metric.inv()
+        g_inv = Tensor(self.manifold, 'uu', values={(k, k): g_inv[k, k] for k in range(self.manifold.dims)})
+        return (g_inv * self).contract(1, 2 + idx)
+
 
 
 class IncompatibleIndexPositionException(Exception):
