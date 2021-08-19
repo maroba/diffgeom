@@ -37,6 +37,24 @@ class TestManifold(unittest.TestCase):
         self.assertEqual(plane.gammas[1, 0, 1], 1/r)
         self.assertEqual(plane.gammas[1, 1, 0], 1 / r)
 
+    def test_transform_cartesian_to_polar_changes_coords_and_metric(self):
+
+        # Arrange
+        x, y = sp.symbols('x, y')
+        r, phi = sp.symbols('r, phi')
+        plane_cartesian = Manifold(metric=sp.diag(1, 1), coords=(x, y))
+
+        # Act
+        plane_polar = plane_cartesian.transform((r, phi), {x: r*sp.cos(phi), y: r*sp.sin(phi)})
+
+        # Assert
+        assert plane_polar.coords == (r, phi)
+        assert len(plane_polar.metric) == 2
+        assert plane_polar.metric[0, 0] == 1
+        assert plane_polar.metric[1, 1] == r ** 2
+        assert plane_polar.metric[r, r] == 1
+        assert plane_polar.metric[phi, phi] == r ** 2
+
 
 class TestIndexedObject(unittest.TestCase):
 

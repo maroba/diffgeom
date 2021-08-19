@@ -26,6 +26,18 @@ class Manifold(object):
     def dims(self):
         return len(self.coords)
 
+    def transform(self, new_coords, trans):
+        jacobian = []
+        for chi in trans.values():
+            row = []
+            for x in new_coords:
+                row.append(sp.diff(chi, x))
+            jacobian.append(row)
+        jacobian = sp.simplify(sp.Matrix(jacobian).inv())
+        new_metric = sp.simplify(jacobian * self._metric.subs(trans) * jacobian.transpose()).inv()
+
+        return Manifold(metric=new_metric, coords=tuple(new_coords))
+
 
 class IndexedObject(object):
 
@@ -42,7 +54,8 @@ class IndexedObject(object):
                     key = key,
                 if not isinstance(key, tuple):
                     key = tuple(key)
-                self.values[key] = value
+                if value != 0:
+                    self.values[key] = value
 
         if names is None:
             self.names_map = {}
@@ -94,6 +107,12 @@ class IndexedObject(object):
                     latex_str += '_{' +  str(m_idx[k]) + '}\\,'
             latex_str += ' = ' + latex_value + '\\\\\n'
         return '$$\\displaystyle %s $$' % latex_str
+
+    def __repr__(self):
+        return self._repr_latex_()
+
+    def __str__(self):
+        return self._repr_latex_()
 
 
 class Christoffel(IndexedObject):
