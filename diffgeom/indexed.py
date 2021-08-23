@@ -156,12 +156,16 @@ class Tensor(IndexedObject):
         return result
 
     def __mul__(self, other):
-        result = Tensor(self.manifold, self.idx_pos + other.idx_pos)
-
-        for m_idx in result.multi_indices:
-            m_idx_left = m_idx[:self.rank]
-            m_idx_right = m_idx[self.rank:]
-            result[m_idx] = self[m_idx_left] * other[m_idx_right]
+        if isinstance(other, Tensor):
+            result = Tensor(self.manifold, self.idx_pos + other.idx_pos)
+            for m_idx in result.multi_indices:
+                m_idx_left = m_idx[:self.rank]
+                m_idx_right = m_idx[self.rank:]
+                result[m_idx] = self[m_idx_left] * other[m_idx_right]
+        else:
+            result = deepcopy(self)
+            for key, value in result.values.items():
+                result[key] *= other
 
         return result
 

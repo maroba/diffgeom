@@ -143,6 +143,17 @@ class TestTensor(unittest.TestCase):
         assert B[0] == rho * A[0]
         assert B[1] == rho * A[1]
 
+    def test_multiply_tensor_with_scalar_reverse(self):
+        # Arrange
+        r, phi = sp.symbols('r, phi')
+        rho = sp.symbols('rho')
+        metric = sp.diag(1, r ** 2)
+        plane = Manifold(metric, coords=(r, phi))
+        A = Tensor(plane, 'ulu', {0: 1, 1: 2})
+        B = A * rho
+
+        assert B[0] == rho * A[0]
+        assert B[1] == rho * A[1]
 
     def test_tensor_contraction_returns_new_tensor_of_lower_rank(self):
         # Arrange
