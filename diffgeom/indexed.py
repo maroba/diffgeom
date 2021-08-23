@@ -68,7 +68,8 @@ class IndexedObject(object):
         return tuple(result)
 
     def simplify(self):
-        for key, value in self.values.items():
+        val_copy = deepcopy(self.values) # prevents "Dictionary size changed during iteration"-error
+        for key, value in val_copy.items():
             self[key] = sp.simplify(value)
 
     def _repr_latex_(self):
