@@ -1,3 +1,5 @@
+from abc import ABC
+
 import sympy as sp
 
 from diffgeom.indexed import Christoffel
@@ -112,6 +114,9 @@ class Manifold(object):
                     rhs += self.gammas[i, j, k] * sp.Derivative(xj, s) * sp.Derivative(xk, s)
             eqs.append(sp.Eq(lhs, rhs))
         return eqs, s
+
+    def parallel_transport_equations(self):
+        raise NotImplementedError
 
 
 class Sphere(Manifold):
