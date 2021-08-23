@@ -1,5 +1,6 @@
 import sympy as sp
 from itertools import product
+from copy import deepcopy
 
 
 class IndexedObject(object):
@@ -143,6 +144,14 @@ class Tensor(IndexedObject):
 
         for m_idx, value in other.values.items():
             result[m_idx] -= value
+
+        return result
+
+    def __rmul__(self, other):
+        result = deepcopy(self)
+
+        for key, value in result.values.items():
+            result[key] *= other
 
         return result
 

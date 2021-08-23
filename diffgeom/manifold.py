@@ -57,7 +57,7 @@ class Manifold(object):
             diffgeom.Tensor of rank 2 (upper)
         """
         inv = self._metric.inv()
-        return Tensor(self, 'll', {(i, j): inv[i, j] for i in range(self.dims)
+        return Tensor(self, 'uu', {(i, j): inv[i, j] for i in range(self.dims)
                                    for j in range(self.dims)
                                    })
 
