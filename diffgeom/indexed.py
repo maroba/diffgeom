@@ -71,6 +71,7 @@ class IndexedObject(object):
         val_copy = deepcopy(self.values) # prevents "Dictionary size changed during iteration"-error
         for key, value in val_copy.items():
             self[key] = sp.simplify(value)
+        return self
 
     def _repr_latex_(self):
 
@@ -274,6 +275,28 @@ class Tensor(IndexedObject):
 
         result.latex_head = '\\nabla ' + result.latex_head
         return result
+
+
+class Vector(Tensor):
+
+    def __init__(self, manifold, values=None, latex_head=None):
+        super(Vector, self).__init__(manifold, 'u', values, latex_head=latex_head)
+        self.manifold = manifold
+
+    def lower_index(self):
+        oneform = super().lower_index(0)
+        return OneForm(self.manifold, values=oneform.values, latex_head=self.latex_head)
+
+
+class OneForm(Tensor):
+
+    def __init__(self, manifold, values=None, latex_head=None):
+        super(OneForm, self).__init__(manifold, 'l', values, latex_head=latex_head)
+        self.manifold = manifold
+
+    def raise_index(self):
+        vector = super().raise_index(0)
+        return Vector(self.manifold, values=vector.values, latex_head=self.latex_head)
 
 
 class RiemannTensor(Tensor):

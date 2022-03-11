@@ -3,7 +3,7 @@ from abc import ABC
 import sympy as sp
 
 from diffgeom.indexed import Christoffel
-from diffgeom import Tensor
+from diffgeom import Tensor, Vector, OneForm
 
 
 class Manifold(object):
@@ -45,7 +45,7 @@ class Manifold(object):
         """
         return Tensor(self, 'll', {(i, j): self._metric[i, j] for i in range(self.dims)
                                                               for j in range(self.dims)
-                                   })
+                                   }, latex_head='g')
 
     @property
     def metric_inv(self):
@@ -101,9 +101,9 @@ class Manifold(object):
 
         return Manifold(metric=new_metric, coords=tuple(new_coords))
 
-    def geodesic_equations(self):
+    def geodesic_equations(self, parameter=r'\tau'):
         eqs = []
-        s = sp.symbols('s')
+        s = sp.symbols(parameter)
         if s in self.coords:
             raise Exception('Name collision between curve parameter s and coordinate name s')
         for i, xi in enumerate(self.coords):
@@ -114,6 +114,12 @@ class Manifold(object):
                     rhs += self.gammas[i, j, k] * sp.Derivative(xj, s) * sp.Derivative(xk, s)
             eqs.append(sp.Eq(lhs, rhs))
         return eqs, s
+
+    def four_velocity(self, name='U'):
+        tau = sp.symbols(r'\tau')
+        return Vector(self, {
+            k: sp.Derivative(x, tau) for k, x in enumerate(self.coords)
+        }, latex_head=name)
 
     def parallel_transport_equations(self):
         raise NotImplementedError
